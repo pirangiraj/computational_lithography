@@ -1,0 +1,1 @@
+Worst |EPE| near corner (pixels): 253.26863208853953
