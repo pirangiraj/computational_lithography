@@ -8,8 +8,7 @@ import os
 # Path-safe results directory
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RESULTS_BASE = os.path.join(BASE_DIR, "results")
-RESULTS_DIR = os.path.join(RESULTS_BASE, "day7_results")
+RESULTS_DIR = os.path.join(BASE_DIR, "results", "day7_results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 # ============================================================
@@ -18,10 +17,8 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 def two_lines_mask(nx, line_width=6, spacing=30):
     img = np.zeros((nx, nx))
     center = nx // 2
-
     left = center - spacing // 2
     right = center + spacing // 2
-
     img[:, left - line_width // 2 : left + line_width // 2] = 1.0
     img[:, right - line_width // 2 : right + line_width // 2] = 1.0
     return img
@@ -31,8 +28,7 @@ def two_lines_mask(nx, line_width=6, spacing=30):
 # ============================================================
 def circular_pupil(nx, radius):
     y, x = np.ogrid[-nx//2:nx//2, -nx//2:nx//2]
-    mask = x*x + y*y <= radius*radius
-    return mask.astype(float)
+    return (x*x + y*y <= radius*radius).astype(float)
 
 # ============================================================
 # Parameters
@@ -41,34 +37,33 @@ nx = 512
 pupil_radius = 60
 
 # Dill parameters
-C = 0.8
+C = 1.2
 
-# Mack parameters
+# Mack parameters (softened)
 Rmax = 1.0
 M0 = 0.5
-n = 4
+n = 2.0
 develop_time = 1.0
-resist_thickness = 0.5
+resist_thickness = 0.55
 
 # Dose sweep
-doses = np.linspace(0.5, 1.5, 11)
+doses = np.linspace(0.6, 1.4, 15)
 
 # ============================================================
-# Optical setup (fixed)
+# Optical imaging (fixed, no renormalization later)
 # ============================================================
 mask = two_lines_mask(nx, line_width=6, spacing=30)
 
 pupil = circular_pupil(nx, pupil_radius)
 field = np.fft.ifft2(np.fft.ifftshift(pupil))
-psf = np.abs(field)**2
-psf = psf / psf.max()
+psf = np.abs(field) ** 2
+psf /= psf.max()
 
-aerial_base = fftconvolve(mask, psf, mode="same")
-aerial_base = aerial_base / aerial_base.max()
+aerial_nominal = fftconvolve(mask, psf, mode="same")
 
-# Target edge location (design intent)
+# Target edge
 center = nx // 2
-target_edge = center + 15   # approx right edge location
+target_edge = center + 15
 
 # ============================================================
 # Sweep dose
@@ -77,15 +72,12 @@ CDs = []
 EPEs = []
 
 for dose in doses:
-    aerial = aerial_base * dose
-    aerial = aerial / aerial.max()
+    aerial = aerial_nominal * dose   # NO RENORMALIZATION
 
-    # Dill exposure
     M = np.exp(-C * aerial)
-
-    # Mack development
-    R = Rmax / (1 + (M / M0)**n)
+    R = Rmax / (1 + (M / M0) ** n)
     clear = R * develop_time
+
     printed = clear > resist_thickness
 
     row = printed[center, :].astype(int)
@@ -103,7 +95,7 @@ for dose in doses:
     EPEs.append(epe)
 
 # ============================================================
-# Save plots (Matplotlib)
+# Save Matplotlib plots
 # ============================================================
 plt.figure()
 plt.title("CD vs Dose")
@@ -117,7 +109,7 @@ plt.close()
 plt.figure()
 plt.title("EPE vs Dose")
 plt.plot(doses, EPEs, marker="o")
-plt.axhline(0, color="k", linestyle="--")
+plt.axhline(0, linestyle="--")
 plt.xlabel("Dose")
 plt.ylabel("EPE (pixels)")
 plt.tight_layout()
@@ -125,7 +117,7 @@ plt.savefig(os.path.join(RESULTS_DIR, "epe_vs_dose.png"))
 plt.close()
 
 # ============================================================
-# Plotly interactive plots
+# Plotly interactive
 # ============================================================
 fig1 = go.Figure()
 fig1.add_trace(go.Scatter(x=doses, y=CDs, mode="lines+markers"))
@@ -147,5 +139,5 @@ np.savetxt(
     header="Dose   CD_pixels   EPE_pixels"
 )
 
-print("Day 7 process window simulation completed.")
+print("Day 7 corrected process window simulation completed.")
 print("Results saved to:", RESULTS_DIR)

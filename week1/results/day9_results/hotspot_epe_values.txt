@@ -1,3 +1,0 @@
-Isolated Line: -245.46242785599568
-Dense Lines: -250.62045232878475
-Line End: nan
