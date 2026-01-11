@@ -1,0 +1,3 @@
+Straight: Worst |EPE| = 268.3915050816624
+Jog: Worst |EPE| = 271.0073799733136
+T_Junction: Worst |EPE| = 291.39835277502857
