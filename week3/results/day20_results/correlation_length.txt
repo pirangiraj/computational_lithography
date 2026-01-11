@@ -1,0 +1,1 @@
+Estimated correlation length (pixels): 400
