@@ -1,0 +1,4 @@
+Trials: 60
+Open probability: 0.9666666666666667
+Short probability: 0.03333333333333333
+Pass probability: -6.938893903907228e-18
