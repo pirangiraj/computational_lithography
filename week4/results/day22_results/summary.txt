@@ -1,0 +1,4 @@
+Mean slope no OPC: 0.3494278163390002
+Mean slope OPC: 0.25437943616990355
+Width sigma no OPC: 0.3726779962499649
+Width sigma OPC: 0.0
